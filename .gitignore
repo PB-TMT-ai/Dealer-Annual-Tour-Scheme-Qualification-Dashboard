@@ -1,0 +1,44 @@
+CLAUDE.local.md
+.workspace/
+*.tmp
+.env
+.env.local
+.env.*.local
+~$*.xlsx
+.claude/settings.local.json
+.claude/plans/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+.venv/
+env/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node (if any tooling)
+node_modules/
+*.tsbuildinfo
