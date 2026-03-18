@@ -527,9 +527,9 @@ def render_scheme_overview(df: pd.DataFrame, month_cols: list[str]) -> None:
         lambda x: f"{x} / 12"
     )
     # Format volumes
-    display["FY 26 total"] = display["FY 26 total"].apply(lambda v: round(v, 1))
+    display["FY 26 total"] = display["FY 26 total"].apply(lambda v: f"{v:.1f}")
     display["Vol to Next Slab"] = display["Vol to Next Slab"].apply(
-        lambda v: "—" if pd.isna(v) else round(v, 1)
+        lambda v: "—" if pd.isna(v) else f"{v:.1f}"
     )
 
     display.rename(
