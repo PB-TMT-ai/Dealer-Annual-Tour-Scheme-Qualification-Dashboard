@@ -592,7 +592,18 @@ def render_dealer_deep_dive(df: pd.DataFrame, month_cols: list[str]) -> None:
     gap = volume_to_next(fy26_vol, slab)
 
     # ── KPI Cards ─────────────────────────────────────────────────────
-    st.markdown("#### Key Performance Indicators")
+    is_self_counter = row.get("Self-Counter", "No") == "Yes"
+    sc_badge = (
+        '<span style="display:inline-block;margin-left:0.7rem;padding:0.15rem 0.7rem;'
+        'font-size:0.75rem;font-weight:600;border-radius:999px;vertical-align:middle;'
+        f'background:{"#fef3c7" if is_self_counter else "#dcfce7"};'
+        f'color:{"#92400e" if is_self_counter else "#166534"};">'
+        f'Self Counter: {"Yes" if is_self_counter else "No"}</span>'
+    )
+    st.markdown(
+        f'<h4 style="margin:0;">Key Performance Indicators {sc_badge}</h4>',
+        unsafe_allow_html=True,
+    )
     k1, k2, k3, k4, k5 = st.columns(5)
 
     def _kpi(col, label: str, value: str, sub: str = "") -> None:
