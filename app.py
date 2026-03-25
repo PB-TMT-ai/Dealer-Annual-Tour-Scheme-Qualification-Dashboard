@@ -39,7 +39,7 @@ def _find_excel_file() -> Path:
         st.sidebar.info(f"📂 Found {len(xlsx_files)} Excel files. Using latest: **{xlsx_files[0].name}**")
     return xlsx_files[0]
 
-TOTAL_RETAIL_MT = 154_078.0
+TOTAL_RETAIL_MT = 143_000.0
 
 # Ordered list of the 12 FY-26 month column names AFTER normalisation
 MONTH_LABELS = [
@@ -299,7 +299,6 @@ _MONTH_RENAME = {
     dt.datetime(2025, 9, 1): "Sep",
     dt.datetime(2025, 10, 1): "Oct",
     dt.datetime(2025, 11, 1): "Nov",
-    dt.datetime(2025, 12, 1): "Dec",
     "Dec-25": "Dec",
     dt.datetime(2026, 1, 1): "Jan",
     dt.datetime(2026, 2, 1): "Feb",
@@ -328,8 +327,7 @@ def load_data() -> tuple[pd.DataFrame, list[str]]:
             if match:
                 rename_map[col] = label
                 break
-        if label not in month_cols:
-            month_cols.append(label)
+        month_cols.append(label)
 
     raw.rename(columns=rename_map, inplace=True)
 
