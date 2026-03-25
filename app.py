@@ -4,6 +4,7 @@ Single-file Streamlit app.
 """
 
 import datetime as dt
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -11,6 +12,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import requests
 import streamlit as st
 
 # ---------------------------------------------------------------------------
@@ -29,14 +31,75 @@ SHEET_NAME = "FY 26_qualification scenario"
 HEADER_ROW = 2  # 0-indexed
 
 
+SHAREPOINT_EXCEL_URL = os.getenv("SHAREPOINT_EXCEL_URL", "").strip()
+_SHAREPOINT_CACHE_FILE = DATA_DIR / "_sharepoint_latest.xlsx"
+_REFRESH_INTERVAL = dt.timedelta(days=1)
+
+
+def _sharepoint_cache_is_fresh() -> bool:
+    """Return True if the cached SharePoint file exists and is less than 1 day old."""
+    if not _SHAREPOINT_CACHE_FILE.exists():
+        return False
+    mtime = dt.datetime.fromtimestamp(_SHAREPOINT_CACHE_FILE.stat().st_mtime)
+    return (dt.datetime.now() - mtime) < _REFRESH_INTERVAL
+
+
+def _download_from_sharepoint() -> Optional[Path]:
+    """Download Excel from SharePoint direct link. Returns path on success, None on failure."""
+    if not SHAREPOINT_EXCEL_URL:
+        return None
+
+    # Use cached copy if it's fresh enough (< 1 day old)
+    if _sharepoint_cache_is_fresh():
+        info("Using cached SharePoint file (less than 1 day old).")
+        return _SHAREPOINT_CACHE_FILE
+
+    info(f"Downloading Excel from SharePoint …")
+    try:
+        resp = requests.get(SHAREPOINT_EXCEL_URL, timeout=60, allow_redirects=True)
+        resp.raise_for_status()
+
+        # Validate that we got an Excel file (not an HTML login page)
+        content_type = resp.headers.get("Content-Type", "")
+        if "html" in content_type.lower():
+            error("SharePoint returned HTML instead of a file — the link may require authentication.")
+            st.sidebar.warning("SharePoint link returned a login page. Using local file instead.")
+            return None
+
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _SHAREPOINT_CACHE_FILE.write_bytes(resp.content)
+        info(f"SharePoint file downloaded ({len(resp.content) / 1024:.0f} KB).")
+        return _SHAREPOINT_CACHE_FILE
+    except requests.RequestException as e:
+        error(f"SharePoint download failed: {e}")
+        st.sidebar.warning(f"Could not download from SharePoint: {e}. Using local file.")
+        # Fall back to cached copy if available (even if stale)
+        if _SHAREPOINT_CACHE_FILE.exists():
+            info("Falling back to stale cached SharePoint file.")
+            return _SHAREPOINT_CACHE_FILE
+        return None
+
+
 def _find_excel_file() -> Path:
-    """Auto-detect the latest .xlsx file in data/ folder."""
-    xlsx_files = sorted(DATA_DIR.glob("*.xlsx"), key=lambda f: f.stat().st_mtime, reverse=True)
+    """Try SharePoint download first, then auto-detect the latest local .xlsx file."""
+    # Try SharePoint source
+    sp_path = _download_from_sharepoint()
+    if sp_path is not None:
+        st.sidebar.success("Data source: SharePoint (online)")
+        return sp_path
+
+    # Fall back to local files
+    xlsx_files = sorted(
+        [f for f in DATA_DIR.glob("*.xlsx") if f.name != _SHAREPOINT_CACHE_FILE.name],
+        key=lambda f: f.stat().st_mtime,
+        reverse=True,
+    )
     if not xlsx_files:
-        st.error("❌ No .xlsx file found in the `data/` folder. Please add one.")
+        st.error("No .xlsx file found in the `data/` folder. Please add one.")
         st.stop()
     if len(xlsx_files) > 1:
-        st.sidebar.info(f"📂 Found {len(xlsx_files)} Excel files. Using latest: **{xlsx_files[0].name}**")
+        st.sidebar.info(f"Found {len(xlsx_files)} Excel files. Using latest: **{xlsx_files[0].name}**")
+    st.sidebar.info("Data source: Local file")
     return xlsx_files[0]
 
 TOTAL_RETAIL_MT = 154_078.0
