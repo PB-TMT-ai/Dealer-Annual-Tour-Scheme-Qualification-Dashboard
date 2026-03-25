@@ -5,6 +5,7 @@ CLAUDE.local.md
 .env.local
 .env.*.local
 ~$*.xlsx
+data/sharepoint_sync_*.xlsx
 data/_sharepoint_latest.xlsx
 .claude/settings.local.json
 .claude/plans/
