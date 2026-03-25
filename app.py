@@ -299,6 +299,7 @@ _MONTH_RENAME = {
     dt.datetime(2025, 9, 1): "Sep",
     dt.datetime(2025, 10, 1): "Oct",
     dt.datetime(2025, 11, 1): "Nov",
+    dt.datetime(2025, 12, 1): "Dec",
     "Dec-25": "Dec",
     dt.datetime(2026, 1, 1): "Jan",
     dt.datetime(2026, 2, 1): "Feb",
@@ -327,7 +328,8 @@ def load_data() -> tuple[pd.DataFrame, list[str]]:
             if match:
                 rename_map[col] = label
                 break
-        month_cols.append(label)
+        if label not in month_cols:
+            month_cols.append(label)
 
     raw.rename(columns=rename_map, inplace=True)
 
