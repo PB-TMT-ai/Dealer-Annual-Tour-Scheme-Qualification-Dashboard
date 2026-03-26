@@ -39,7 +39,7 @@ def _find_excel_file() -> Path:
         st.sidebar.info(f"📂 Found {len(xlsx_files)} Excel files. Using latest: **{xlsx_files[0].name}**")
     return xlsx_files[0]
 
-TOTAL_RETAIL_MT = 154_078.0
+TOTAL_RETAIL_MT = 156_103.0
 
 # Ordered list of the 12 FY-26 month column names AFTER normalisation
 MONTH_LABELS = [
